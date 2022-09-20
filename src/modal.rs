@@ -1,11 +1,7 @@
-use eframe::{
-    self,
-    egui::{
-        Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui,
-        Window,
-    },
+use egui::{
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
+    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, Window,
 };
 
 /// The different styles a modal button can take.
