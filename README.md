@@ -1,9 +1,9 @@
 # egui-modal, a modal library for [`egui`](https://github.com/emilk/egui)
-<!-- [![crates.io]()]() -->
-<!-- [![docs]()]() -->
+[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.1.0)
+[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.1.0/egui_modal/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/n00kii/egui-modal/blob/main/README.md)
 
-![modal](media/modal.png)
+<img src="media/modal.png">
 
 ## usage:
 ```rust
