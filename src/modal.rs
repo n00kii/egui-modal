@@ -1,7 +1,7 @@
 use eframe::{
     self,
     egui::{
-        style::Margin, Area, Button, Context, Frame, Id, InnerResponse, Label, LayerId, Layout, Order, Response, RichText, Sense, TextEdit, Ui,
+        Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui,
         Window,
     },
     emath::{Align, Align2},

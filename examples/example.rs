@@ -29,7 +29,7 @@ impl Default for ExampleApp {
 }
 
 impl eframe::App for ExampleApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::Window::new("egui-modal").show(ctx, |ui| {
             // you can put the modal creation and show logic wherever you want
             // (though of course it needs to be created before it can be used)
@@ -155,6 +155,6 @@ fn main() {
     eframe::run_native(
         "egui-modal example",
         eframe::NativeOptions::default(),
-        Box::new(|cc| Box::new(ExampleApp::default())),
+        Box::new(|_cc| Box::new(ExampleApp::default())),
     )
 }
