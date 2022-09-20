@@ -40,7 +40,7 @@ impl eframe::App for ExampleApp {
 
             // the show function defines what is shown in the modal, but the modal
             // won't actually show until you do modal.open(ctx)
-            modal.show(ctx, |ui| {
+            modal.show(|ui| {
                 // these helper functions are NOT mandatory to use, they just
                 // help implement some styling with margins and separators
                 // you can put whatever you like in here
@@ -142,7 +142,7 @@ impl eframe::App for ExampleApp {
             // why is this down here?? just wanted to show that you can put
             // the modal's [`.show()`] anywhere but we could have put this above
             // modal if we wanted
-            nested_modal.show(ctx, |ui| {
+            nested_modal.show(|ui| {
                 nested_modal.body(ui, "hello there!");
                 nested_modal.buttons(ui, |ui| {
                     nested_modal.button(ui, "close");

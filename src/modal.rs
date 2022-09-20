@@ -213,11 +213,11 @@ impl Modal {
 
     /// The ui contained in this function will be shown within the modal window. The modal will only actually show 
     /// when [`Modal::open`] is used. 
-    pub fn show<R>(&self, ctx: &Context, add_contents: impl FnOnce(&mut Ui) -> R) {
-        let mut modal_state = ModalState::load(ctx, self.id);
+    pub fn show<R>(&self, add_contents: impl FnOnce(&mut Ui) -> R) {
+        let mut modal_state = ModalState::load(&self.ctx, self.id);
         if modal_state.is_open {
-            let ctx_clone = ctx.clone();
-            Area::new(self.id).interactable(true).fixed_pos(Pos2::ZERO).show(ctx, |ui: &mut Ui| {
+            let ctx_clone = self.ctx.clone();
+            Area::new(self.id).interactable(true).fixed_pos(Pos2::ZERO).show(&self.ctx, |ui: &mut Ui| {
                 let screen_rect = ui.ctx().input().screen_rect;
                 let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
                 if area_response.clicked() && self.close_on_outside_click {
