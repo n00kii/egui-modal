@@ -89,6 +89,7 @@ impl Default for ModalStyle {
 pub struct Modal {
     close_on_outside_click: bool,
     style: ModalStyle,
+    ctx: Context,
     id: Id,
     window_id: Id,
 }
@@ -108,31 +109,32 @@ fn ui_with_margin<R>(ui: &mut Ui, margin: f32, add_contents: impl FnOnce(&mut Ui
 impl Modal {
     /// Creates a new [`Modal`]. Can use constructor functions like [`Modal::with_style`]
     /// to modify upon creation.
-    pub fn new(id_source: impl std::fmt::Display) -> Self {
+    pub fn new(ctx: &Context, id_source: impl std::fmt::Display) -> Self {
         Self {
             id: Id::new(id_source.to_string()),
             style: ModalStyle::default(),
+            ctx: ctx.clone(),
             close_on_outside_click: false,
             window_id: Id::new("window_".to_string() + &id_source.to_string()),
         }
     }
 
-    fn set_open_state(&self, ctx: &Context, is_open: bool) {
-        let mut modal_state = ModalState::load(ctx, self.id);
+    fn set_open_state(&self, is_open: bool) {
+        let mut modal_state = ModalState::load(&self.ctx, self.id);
         modal_state.is_open = is_open;
-        modal_state.save(ctx, self.id)
+        modal_state.save(&self.ctx, self.id)
     }
 
     /// Open the modal; make it visible. The modal prevents user input to other parts of the
     /// application.
-    pub fn open(&self, ctx: &Context) {
-        self.set_open_state(ctx, true)
+    pub fn open(&self) {
+        self.set_open_state( true)
     }
 
     /// Close the modal so that it is no longer visible, allowing input to flow back into
     /// the application.
-    pub fn close(&self, ctx: &Context) {
-        self.set_open_state(ctx, false)
+    pub fn close(&self) {
+        self.set_open_state(false)
     }
 
     /// If set to `true`, the modal will close itself if the user clicks outside on the modal window
@@ -204,7 +206,7 @@ impl Modal {
 
         let response = ui.add(button);
         if response.clicked() {
-            self.close(ui.ctx())
+            self.close()
         }
         response
     }
@@ -219,7 +221,7 @@ impl Modal {
                 let screen_rect = ui.ctx().input().screen_rect;
                 let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
                 if area_response.clicked() && self.close_on_outside_click {
-                    self.close(ctx);
+                    self.close();
                 }
                 ui.painter().rect_filled(screen_rect, Rounding::none(), self.style.overlay_color);
             });
@@ -236,6 +238,5 @@ impl Modal {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
             }
         }
-        // frame.
     }
 }

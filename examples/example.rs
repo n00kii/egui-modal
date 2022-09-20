@@ -33,8 +33,8 @@ impl eframe::App for ExampleApp {
         egui::Window::new("egui-modal").show(ctx, |ui| {
             // you can put the modal creation and show logic wherever you want
             // (though of course it needs to be created before it can be used)
-            let nested_modal = Modal::new("nested_modal");
-            let modal = Modal::new("modal")
+            let nested_modal = Modal::new(ctx, "nested_modal");
+            let modal = Modal::new(ctx, "modal")
                 .with_style(&self.modal_style)
                 .with_close_on_outside_click(self.close_on_outside_click || !self.include_buttons);
 
@@ -67,7 +67,7 @@ impl eframe::App for ExampleApp {
                             // always close your previous modal before opening a new one otherwise weird
                             // layering things will happen. again, the helper functions for the buttons automatically
                             // close the modal on click, so we don't have to manually do that here
-                            nested_modal.open(ctx);
+                            nested_modal.open();
                         }
                     })
                 }
@@ -75,7 +75,7 @@ impl eframe::App for ExampleApp {
 
             ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
                 if ui.button("open modal").clicked() {
-                    modal.open(ctx);
+                    modal.open();
                 }
                 ui.separator();
                 // to prevent locking the example window without any way to close the modal :)
@@ -89,9 +89,9 @@ impl eframe::App for ExampleApp {
                         self.close_on_outside_click = !self.close_on_outside_click
                     };
                 });
-                ui.checkbox(&mut self.include_title, "inclde title");
-                ui.checkbox(&mut self.include_body, "inclde body");
-                ui.checkbox(&mut self.include_buttons, "inclde buttons");
+                ui.checkbox(&mut self.include_title, "include title");
+                ui.checkbox(&mut self.include_body, "include body");
+                ui.checkbox(&mut self.include_buttons, "include buttons");
                 ui.separator();
                 egui::Grid::new("options_grid")
                     .min_col_width(200.)
