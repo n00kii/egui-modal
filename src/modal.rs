@@ -1,12 +1,21 @@
 use eframe::{
     self,
-    egui::{
-        Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui,
-        Window,
-    },
+    egui::{Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, Window},
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
 };
+
+const ERROR_ICON_COLOR: Color32 = Color32::from_rgb(200, 90, 90);
+const INFO_ICON_COLOR: Color32 = Color32::from_rgb(150, 200, 210);
+const WARNING_ICON_COLOR: Color32 = Color32::from_rgb(230, 220, 140);
+const SUCCESS_ICON_COLOR: Color32 = Color32::from_rgb(140, 230, 140);
+
+const CAUTION_BUTTON_FILL: Color32 = Color32::from_rgb(87, 38, 34);
+const SUGGESTED_BUTTON_FILL: Color32 = Color32::from_rgb(33, 54, 84);
+const CAUTION_BUTTON_TEXT_COLOR: Color32 = Color32::from_rgb(242, 148, 148);
+const SUGGESTED_BUTTON_TEXT_COLOR: Color32 = Color32::from_rgb(141, 182, 242);
+
+const OVERLAY_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 200);
 
 /// The different styles a modal button can take.
 pub enum ModalButtonStyle {
@@ -18,23 +27,76 @@ pub enum ModalButtonStyle {
     Caution,
 }
 
+/// An icon. If used, it will be shown next to the body of 
+/// the modal.
+#[derive(Clone, Default, PartialEq)]
+pub enum Icon {
+    #[default]
+    /// An info icon
+    Info,
+    /// A warning icon
+    Warning,
+    /// A success icon
+    Success,
+    /// An error icon
+    Error,
+    /// A custom icon. The first field in the tuple is
+    /// the text of the icon, and the second field is the
+    /// color.
+    Custom((String, Color32)),
+}
+
+impl std::fmt::Display for Icon {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Icon::Info => write!(f, "ℹ"),
+            Icon::Warning => write!(f, "⚠"),
+            Icon::Success => write!(f, "✔"),
+            Icon::Error => write!(f, "❗"),
+            Icon::Custom((icon_text, _)) => write!(f, "{icon_text}"),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+struct ModalData {
+    title: Option<String>,
+    body: Option<String>,
+    icon: Option<Icon>,
+}
+
+#[derive(Clone)]
+enum ModalType {
+    Modal,
+    Dialog(ModalData),
+}
+
 #[derive(Clone)]
 /// Information about the current state of the modal. (Pretty empty
 /// right now but may be expanded upon in the future.)
 struct ModalState {
     is_open: bool,
+    modal_type: ModalType,
 }
 
 #[derive(Clone)]
-/// Contains styling parameters for the modal, like body margin 
+/// Contains styling parameters for the modal, like body margin
 /// and button colors.
 pub struct ModalStyle {
-    /// The margin around the modal body. Only applies if using 
+    /// The margin around the modal body. Only applies if using
     /// [`.body()`]
     pub body_margin: f32,
+    /// The margin around the container of the icon and body. Only
+    /// applies if using [`.frame()`]
+    pub frame_margin: f32,
+    /// The margin around the container of the icon. Only applies
+    /// if using [`.icon()`].
+    pub icon_margin: f32,
+    /// The size of any icons used in the modal
+    pub icon_size: f32,
     /// The color of the overlay that dims the background
     pub overlay_color: Color32,
-    
+
     /// The fill color for the caution button style
     pub caution_button_fill: Color32,
     /// The fill color for the suggested button style
@@ -44,6 +106,21 @@ pub struct ModalStyle {
     pub caution_button_text_color: Color32,
     /// The text color for the suggested button style
     pub suggested_button_text_color: Color32,
+
+    /// The text of the acknowledgement button for dialogs
+    pub dialog_ok_text: String,
+
+    /// The color of the info icon
+    pub info_icon_color: Color32,
+    /// The color of the warning icon
+    pub warning_icon_color: Color32,
+    /// The color of the success icon
+    pub success_icon_color: Color32,
+    /// The color of the error icon
+    pub error_icon_color: Color32,  
+
+    /// The alignment of text inside the body
+    pub body_alignment: Align,
 }
 
 impl ModalState {
@@ -57,7 +134,10 @@ impl ModalState {
 
 impl Default for ModalState {
     fn default() -> Self {
-        Self { is_open: false }
+        Self {
+            is_open: false,
+            modal_type: ModalType::Modal,
+        }
     }
 }
 
@@ -65,17 +145,30 @@ impl Default for ModalStyle {
     fn default() -> Self {
         Self {
             body_margin: 5.,
-            overlay_color: Color32::from_rgba_unmultiplied(0, 0, 0, 200),
+            icon_margin: 7.,
+            frame_margin: 2.,
+            icon_size: 30.,
+            overlay_color: OVERLAY_COLOR,
 
-            caution_button_fill: Color32::from_rgb(87, 38, 34),
-            suggested_button_fill: Color32::from_rgb(33, 54, 84),
+            caution_button_fill: CAUTION_BUTTON_FILL,
+            suggested_button_fill: SUGGESTED_BUTTON_FILL,
 
-            caution_button_text_color: Color32::from_rgb(242, 148, 148),
-            suggested_button_text_color: Color32::from_rgb(141, 182, 242),
+            caution_button_text_color: CAUTION_BUTTON_TEXT_COLOR,
+            suggested_button_text_color: SUGGESTED_BUTTON_TEXT_COLOR,
+
+            dialog_ok_text: "ok".to_string(),
+
+            info_icon_color: INFO_ICON_COLOR,
+            warning_icon_color: WARNING_ICON_COLOR,
+            success_icon_color: SUCCESS_ICON_COLOR,
+            error_icon_color: ERROR_ICON_COLOR,
+
+            body_alignment: Align::Min,
+            // default_size: None,//Some([150., 20.]),
         }
     }
 }
-/// A [`Modal`] is created using [`Modal::new()`]. Make sure to use a `let` binding when 
+/// A [`Modal`] is created using [`Modal::new()`]. Make sure to use a `let` binding when
 /// using [`Modal::new()`] to ensure you can call things like [`Modal::open()`] later on.
 /// ```
 /// let modal = Modal::new("my_modal");
@@ -95,15 +188,9 @@ pub struct Modal {
 }
 
 fn ui_with_margin<R>(ui: &mut Ui, margin: f32, add_contents: impl FnOnce(&mut Ui) -> R) {
-    ui.vertical(|ui| {
-        ui.add_space(margin);
-        ui.horizontal(|ui| {
-            ui.add_space(margin);
-            add_contents(ui);
-            ui.add_space(margin);
-        });
-        ui.add_space(margin);
-    });
+    egui::Frame::none()
+        .inner_margin(margin)
+        .show(ui, |ui| add_contents(ui));
 }
 
 impl Modal {
@@ -128,7 +215,7 @@ impl Modal {
     /// Open the modal; make it visible. The modal prevents user input to other parts of the
     /// application.
     pub fn open(&self) {
-        self.set_open_state( true)
+        self.set_open_state(true)
     }
 
     /// Close the modal so that it is no longer visible, allowing input to flow back into
@@ -143,7 +230,7 @@ impl Modal {
         self.close_on_outside_click = do_close_on_click_ouside;
         self
     }
-    
+
     /// Change the [`ModalStyle`] of the modal upon creation.
     pub fn with_style(mut self, style: &ModalStyle) -> Self {
         self.style = style.clone();
@@ -159,12 +246,47 @@ impl Modal {
         ui.separator();
     }
 
+    /// Helper function for styling the icon of the modal.
+    pub fn icon(&self, ui: &mut Ui, icon: Icon) {
+        let color = match icon {
+            Icon::Info => self.style.info_icon_color,
+            Icon::Warning => self.style.warning_icon_color,
+            Icon::Success => self.style.success_icon_color,
+            Icon::Error => self.style.error_icon_color,
+            Icon::Custom((_, color)) => color,
+        };
+        let text = RichText::new(icon.to_string())
+            .color(color)
+            .size(self.style.icon_size);
+        ui_with_margin(ui, self.style.icon_margin, |ui| {
+            ui.add(egui::Label::new(text));
+        });
+    }
+
+    /// Helper function for styling the container the of body and icon.
+    pub fn frame<R>(&self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
+        ui.with_layout(
+            Layout::top_down(Align::Center).with_cross_align(Align::Center),
+            |ui| ui_with_margin(ui, self.style.frame_margin, |ui| add_contents(ui)),
+        );
+    }
+
+    /// Helper function that should be used when using a body and icon together.
+    pub fn body_and_icon(&self, ui: &mut Ui, text: impl Into<RichText>, icon: Icon) {
+        egui::Grid::new("id_source").num_columns(2).show(ui, |ui| {
+            self.icon(ui, icon);
+            self.body(ui, text);
+        });
+    }
+
     /// Helper function for styling the body of the modal.
     pub fn body(&self, ui: &mut Ui, text: impl Into<RichText>) {
         let text: RichText = text.into();
-        ui_with_margin(ui, self.style.body_margin, |ui| {
-            ui.label(text);
-        })
+        ui.with_layout(Layout::top_down(self.style.body_alignment), |ui| {
+            ui_with_margin(ui, self.style.body_margin, |ui| {
+                ui.label(text);
+            })
+        });
     }
 
     /// Helper function for styling the button container of the modal.
@@ -173,7 +295,7 @@ impl Modal {
         ui.with_layout(Layout::right_to_left(Align::Min), add_contents);
     }
 
-    /// Helper function for creating a normal button for the modal. 
+    /// Helper function for creating a normal button for the modal.
     /// Automatically closes the modal on click.
     pub fn button(&self, ui: &mut Ui, text: impl Into<RichText>) -> Response {
         self.styled_button(ui, text, ModalButtonStyle::None)
@@ -190,8 +312,13 @@ impl Modal {
     pub fn suggested_button(&self, ui: &mut Ui, text: impl Into<RichText>) -> Response {
         self.styled_button(ui, text, ModalButtonStyle::Suggested)
     }
-    
-    fn styled_button(&self, ui: &mut Ui, text: impl Into<RichText>, button_style: ModalButtonStyle) -> Response {
+
+    fn styled_button(
+        &self,
+        ui: &mut Ui,
+        text: impl Into<RichText>,
+        button_style: ModalButtonStyle,
+    ) -> Response {
         let button = match button_style {
             ModalButtonStyle::Suggested => {
                 let text: RichText = text.into().color(self.style.suggested_button_text_color);
@@ -211,20 +338,28 @@ impl Modal {
         response
     }
 
-    /// The ui contained in this function will be shown within the modal window. The modal will only actually show 
-    /// when [`Modal::open`] is used. 
+    /// The ui contained in this function will be shown within the modal window. The modal will only actually show
+    /// when [`Modal::open`] is used.
     pub fn show<R>(&self, add_contents: impl FnOnce(&mut Ui) -> R) {
         let mut modal_state = ModalState::load(&self.ctx, self.id);
         if modal_state.is_open {
             let ctx_clone = self.ctx.clone();
-            Area::new(self.id).interactable(true).fixed_pos(Pos2::ZERO).show(&self.ctx, |ui: &mut Ui| {
-                let screen_rect = ui.ctx().input().screen_rect;
-                let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
-                if area_response.clicked() && self.close_on_outside_click {
-                    self.close();
-                }
-                ui.painter().rect_filled(screen_rect, Rounding::none(), self.style.overlay_color);
-            });
+            Area::new(self.id)
+                .interactable(true)
+                .fixed_pos(Pos2::ZERO)
+                .show(&self.ctx, |ui: &mut Ui| {
+                    let screen_rect = ui.ctx().input().screen_rect;
+                    let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
+                    if area_response.clicked() && self.close_on_outside_click {
+                        self.close();
+                    }
+                    ui.painter().rect_filled(
+                        screen_rect,
+                        Rounding::none(),
+                        self.style.overlay_color,
+                    );
+                });
+
             let window = Window::new("")
                 .id(self.window_id)
                 .open(&mut modal_state.is_open)
@@ -237,6 +372,58 @@ impl Modal {
                 inner_response.response.request_focus();
                 ctx_clone.move_to_top(inner_response.response.layer_id);
             }
+        }
+    }
+
+    /// Open the modal as a dialog. This is a shorthand way of defining a [`Modal::show`] once,
+    /// for example, if a function returns an `Error`. This should be used in conjunction with
+    /// [`Modal::show_dialog`]. This function should be put AFTER any calls to
+    pub fn open_dialog(
+        &self,
+        title: Option<impl std::fmt::Display>,
+        body: Option<impl std::fmt::Display>,
+        icon: Option<Icon>,
+    ) {
+        let modal_data = ModalData {
+            title: title.map(|s| s.to_string()),
+            body: body.map(|s| s.to_string()),
+            icon,
+        };
+        let mut modal_state = ModalState::load(&self.ctx, self.id);
+        modal_state.modal_type = ModalType::Dialog(modal_data);
+        modal_state.is_open = true;
+        modal_state.save(&self.ctx, self.id);
+    }
+
+    /// Needed in order to use [`Modal::open_dialog`]. Make sure this is called every frame, as
+    /// it renders the necessary ui when using a modal as a dialog.
+    pub fn show_dialog(&mut self) {
+        let modal_state = ModalState::load(&self.ctx, self.id);
+        if let ModalType::Dialog(modal_data) = modal_state.modal_type {
+            self.close_on_outside_click = true;
+            self.show(|ui| {
+                if let Some(title) = modal_data.title {
+                    self.title(ui, title)
+                }
+                self.frame(ui, |ui| {
+                    if !modal_data.body.is_some() {
+                        if let Some(icon) = modal_data.icon {
+                            self.icon(ui, icon)
+                        }
+                    } else if !modal_data.icon.is_some() {
+                        if let Some(body) = modal_data.body {
+                            self.body(ui, body)
+                        }
+                    } else if modal_data.icon.is_some() && modal_data.icon.is_some() {
+                        self.body_and_icon(ui, modal_data.body.unwrap(), modal_data.icon.unwrap())
+                    }
+                });
+                self.buttons(ui, |ui| {
+                    ui.with_layout(Layout::top_down_justified(Align::Center), |ui| {
+                        self.button(ui, &self.style.dialog_ok_text)
+                    })
+                })
+            });
         }
     }
 }
