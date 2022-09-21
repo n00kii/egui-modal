@@ -34,6 +34,8 @@ if ui.button("Open the modal").clicked() {
 }
 ```
 ## dialog usage
+![dialog](https://raw.githubusercontent.com/n00kii/egui-modal/main/media/dialog.png)
+
 in some use cases, it may be more convenient to both open and style the modal as a dialog as a one-time action, like on the single instance of a function's return.
 ```rust
 /* calling every frame */
