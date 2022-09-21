@@ -273,7 +273,7 @@ impl Modal {
 
     /// Helper function that should be used when using a body and icon together.
     pub fn body_and_icon(&self, ui: &mut Ui, text: impl Into<RichText>, icon: Icon) {
-        egui::Grid::new("id_source").num_columns(2).show(ui, |ui| {
+        egui::Grid::new(self.id).num_columns(2).show(ui, |ui| {
             self.icon(ui, icon);
             self.body(ui, text);
         });

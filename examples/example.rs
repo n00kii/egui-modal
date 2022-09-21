@@ -43,7 +43,7 @@ impl eframe::App for ExampleApp {
                 .with_close_on_outside_click(self.close_on_outside_click || !self.include_buttons);
 
             // the show function defines what is shown in the modal, but the modal
-            // won't actually show until you do modal.open(ctx)
+            // won't actually show until you do modal.open()
             modal.show(|ui| {
                 // these helper functions are NOT mandatory to use, they just
                 // help implement some styling with margins and separators
@@ -63,7 +63,7 @@ impl eframe::App for ExampleApp {
                         if modal.button(ui, "close").clicked() {
                             // all buttons created with the helper functions automatically
                             // close the modal on click, but you can close it yourself with
-                            // ['modal.close(ctx)']
+                            // ['modal.close()']
                             println!("hello world!")
                         }
 
@@ -78,7 +78,9 @@ impl eframe::App for ExampleApp {
                 }
             });
 
+            // a dialog is useful when you have a one-time occurance and you want to relay information to the user
             let mut dialog_modal = Modal::new(ctx, "dialog_modal").with_style(&self.modal_style);
+            // make sure you don't forget to show the dialog!
             dialog_modal.show_dialog();
 
             ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
@@ -87,6 +89,7 @@ impl eframe::App for ExampleApp {
                 }
 
                 if ui.button("open dialog").clicked() {
+                    // [`.open_dialog()`] both sets the visual info for the dialog and opens it at the same time
                     dialog_modal.open_dialog(
                         Some("this is a dialog"),
                         Some("this helps for showing information about one-time events"),
@@ -223,7 +226,9 @@ impl eframe::App for ExampleApp {
             // the modal's [`.show()`] anywhere but we could have put this above
             // modal if we wanted
             nested_modal.show(|ui| {
-                nested_modal.body(ui, "hello there!");
+                nested_modal.frame(ui, |ui| {
+                    nested_modal.body(ui, "hello there!");
+                });
                 nested_modal.buttons(ui, |ui| {
                     nested_modal.button(ui, "close");
                 })
