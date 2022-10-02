@@ -1,7 +1,7 @@
 use egui::{
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
-    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, Window,
+    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, Window, WidgetText,
 };
 
 const ERROR_ICON_COLOR: Color32 = Color32::from_rgb(200, 90, 90);
@@ -163,19 +163,34 @@ impl Default for ModalStyle {
             error_icon_color: ERROR_ICON_COLOR,
 
             body_alignment: Align::Min,
-            // default_size: None,//Some([150., 20.]),
         }
     }
 }
 /// A [`Modal`] is created using [`Modal::new()`]. Make sure to use a `let` binding when
 /// using [`Modal::new()`] to ensure you can call things like [`Modal::open()`] later on.
 /// ```
-/// let modal = Modal::new("my_modal");
-/// modal.show(ctx, |ui| {
+/// let modal = Modal::new(ctx, "my_modal");
+/// modal.show(|ui| {
 ///     ui.label("Hello world!")
 /// });
 /// if ui.button("modal").clicked() {
-///     modal.open(ctx);
+///     modal.open();
+/// }
+/// ```
+/// Helper functions are also available to use that help apply margins based on the modal's
+/// [`ModalStyle`]. They are not necessary to use, but may help reduce boilerplate.
+/// ```
+/// let other_modal = Modal::new(ctx, "another_modal");
+/// other_modal.show(|ui| {
+///     other_modal.frame(ui, |ui| {
+///         other_modal.body(ui, "Hello again, world!");
+///     });
+///     other_modal.buttons(ui, |ui| {
+///         other_modal.button(ui, "Close");
+///     });
+/// });
+/// if ui.button("open the other modal").clicked() {
+///     other_modal.open();
 /// }
 /// ```
 pub struct Modal {
@@ -237,8 +252,14 @@ impl Modal {
     }
 
     /// Helper function for styling the title of the modal.
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.title(ui, "my title");
+    /// });
+    /// ```
     pub fn title(&self, ui: &mut Ui, text: impl Into<RichText>) {
-        let text: RichText = text.into();
+        let text: RichText = text.into();        
         ui.vertical_centered(|ui| {
             ui.heading(text);
         });
@@ -246,6 +267,14 @@ impl Modal {
     }
 
     /// Helper function for styling the icon of the modal.
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.frame(ui, |ui| {
+    ///         modal.icon(ui, Icon::Info);
+    ///     });
+    /// });
+    /// ```
     pub fn icon(&self, ui: &mut Ui, icon: Icon) {
         let color = match icon {
             Icon::Info => self.style.info_icon_color,
@@ -263,6 +292,18 @@ impl Modal {
     }
 
     /// Helper function for styling the container the of body and icon.
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.title(ui, "my title");
+    ///     modal.frame(ui, |ui| {
+    ///         // inner modal contents go here
+    ///     });
+    ///     modal.buttons(ui, |ui| {
+    ///         // button contents go here
+    ///     });
+    /// });
+    /// ```
     pub fn frame<R>(&self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
         ui.with_layout(
             Layout::top_down(Align::Center).with_cross_align(Align::Center),
@@ -271,7 +312,15 @@ impl Modal {
     }
 
     /// Helper function that should be used when using a body and icon together.
-    pub fn body_and_icon(&self, ui: &mut Ui, text: impl Into<RichText>, icon: Icon) {
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.frame(ui, |ui| {
+    ///         modal.body_and_icon(ui, "my modal body", Icon::Warning);
+    ///     });
+    /// });
+    /// ```
+    pub fn body_and_icon(&self, ui: &mut Ui, text: impl Into<WidgetText>, icon: Icon) {
         egui::Grid::new(self.id).num_columns(2).show(ui, |ui| {
             self.icon(ui, icon);
             self.body(ui, text);
@@ -279,8 +328,16 @@ impl Modal {
     }
 
     /// Helper function for styling the body of the modal.
-    pub fn body(&self, ui: &mut Ui, text: impl Into<RichText>) {
-        let text: RichText = text.into();
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.frame(ui, |ui| {
+    ///         modal.body(ui, "my modal body");
+    ///     });
+    /// });
+    /// ```
+    pub fn body(&self, ui: &mut Ui, text: impl Into<WidgetText>) {
+        let text: WidgetText = text.into();
         ui.with_layout(Layout::top_down(self.style.body_alignment), |ui| {
             ui_with_margin(ui, self.style.body_margin, |ui| {
                 ui.label(text);
@@ -289,6 +346,14 @@ impl Modal {
     }
 
     /// Helper function for styling the button container of the modal.
+    /// ```
+    /// let modal = Modal::new(ctx, "modal");
+    /// modal.show(|ui| {
+    ///     modal.buttons(ui, |ui| {
+    ///         modal.button(ui, "my modal button");
+    ///     });
+    /// });
+    /// ```
     pub fn buttons<R>(&self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
         ui.separator();
         ui.with_layout(Layout::right_to_left(Align::Min), add_contents);
@@ -296,35 +361,35 @@ impl Modal {
 
     /// Helper function for creating a normal button for the modal.
     /// Automatically closes the modal on click.
-    pub fn button(&self, ui: &mut Ui, text: impl Into<RichText>) -> Response {
+    pub fn button(&self, ui: &mut Ui, text: impl Into<WidgetText>) -> Response {
         self.styled_button(ui, text, ModalButtonStyle::None)
     }
 
     /// Helper function for creating a "cautioned" button for the modal.
     /// Automatically closes the modal on click.
-    pub fn caution_button(&self, ui: &mut Ui, text: impl Into<RichText>) -> Response {
+    pub fn caution_button(&self, ui: &mut Ui, text: impl Into<WidgetText>) -> Response {
         self.styled_button(ui, text, ModalButtonStyle::Caution)
     }
 
     /// Helper function for creating a "suggested" button for the modal.
     /// Automatically closes the modal on click.
-    pub fn suggested_button(&self, ui: &mut Ui, text: impl Into<RichText>) -> Response {
+    pub fn suggested_button(&self, ui: &mut Ui, text: impl Into<WidgetText>) -> Response {
         self.styled_button(ui, text, ModalButtonStyle::Suggested)
     }
 
     fn styled_button(
         &self,
         ui: &mut Ui,
-        text: impl Into<RichText>,
+        text: impl Into<WidgetText>,
         button_style: ModalButtonStyle,
     ) -> Response {
         let button = match button_style {
             ModalButtonStyle::Suggested => {
-                let text: RichText = text.into().color(self.style.suggested_button_text_color);
+                let text: WidgetText = text.into().color(self.style.suggested_button_text_color);
                 Button::new(text).fill(self.style.suggested_button_fill)
             }
             ModalButtonStyle::Caution => {
-                let text: RichText = text.into().color(self.style.caution_button_text_color);
+                let text: WidgetText = text.into().color(self.style.caution_button_text_color);
                 Button::new(text).fill(self.style.caution_button_fill)
             }
             ModalButtonStyle::None => Button::new(text.into()),

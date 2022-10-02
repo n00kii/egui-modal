@@ -1,6 +1,6 @@
 # egui-modal, a modal library for [`egui`](https://github.com/emilk/egui)
-[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.1.4)
-[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.1.4/egui_modal/)
+[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/craztes/egui-modal/0.1.5)
+[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.1.5/egui_modal/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/n00kii/egui-modal/blob/main/README.md)
 
 ![modal](https://raw.githubusercontent.com/n00kii/egui-modal/main/media/modal.png?token=GHSAT0AAAAAABVWXBGJBQSFC3PLQP4KKOG6YZJIDCA)
@@ -16,16 +16,16 @@ modal.show(|ui| {
     // these helper functions help set the ui based on the modal's
     // set style, but they are not required and you can put whatever
     // ui you want inside [`.show()`]
-    modal.title(ui, "My modal");
+    modal.title(ui, "Hello world!");
     modal.frame(ui, |ui| {
-        modal.body(ui, "This is a modal");
+        modal.body(ui, "This is a modal.");
     });
     modal.buttons(ui, |ui| {
         // After clicking, the modal is automatically closed
-        if modal.button("A button").clicked() {
+        if modal.button("close").clicked() {
             println!("Hello world!")
         };
-    });
+    }); 
 });
 
 if ui.button("Open the modal").clicked() {

@@ -54,7 +54,7 @@ impl eframe::App for ExampleApp {
                 // this helper just applies a margin specified by the ModalStyle
                 modal.frame(ui, |ui| {
                     if self.include_body {
-                        modal.body(ui, &mut self.modal_body);
+                        modal.body(ui, &self.modal_body);
                     }
                 });
                 if self.include_buttons {
