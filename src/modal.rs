@@ -1,7 +1,7 @@
 use egui::{
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
-    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, Window, WidgetText,
+    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, WidgetText, Window,
 };
 
 const ERROR_ICON_COLOR: Color32 = Color32::from_rgb(200, 90, 90);
@@ -26,7 +26,7 @@ pub enum ModalButtonStyle {
     Caution,
 }
 
-/// An icon. If used, it will be shown next to the body of 
+/// An icon. If used, it will be shown next to the body of
 /// the modal.
 #[derive(Clone, Default, PartialEq)]
 pub enum Icon {
@@ -74,6 +74,7 @@ enum ModalType {
 /// Information about the current state of the modal. (Pretty empty
 /// right now but may be expanded upon in the future.)
 struct ModalState {
+    was_outside_clicked: bool,
     is_open: bool,
     modal_type: ModalType,
 }
@@ -116,7 +117,7 @@ pub struct ModalStyle {
     /// The color of the success icon
     pub success_icon_color: Color32,
     /// The color of the error icon
-    pub error_icon_color: Color32,  
+    pub error_icon_color: Color32,
 
     /// The alignment of text inside the body
     pub body_alignment: Align,
@@ -134,6 +135,7 @@ impl ModalState {
 impl Default for ModalState {
     fn default() -> Self {
         Self {
+            was_outside_clicked: false,
             is_open: false,
             modal_type: ModalType::Modal,
         }
@@ -226,6 +228,18 @@ impl Modal {
         modal_state.save(&self.ctx, self.id)
     }
 
+    fn set_outside_clicked(&self, was_clicked: bool) {
+        let mut modal_state = ModalState::load(&self.ctx, self.id);
+        modal_state.was_outside_clicked = was_clicked;
+        modal_state.save(&self.ctx, self.id)
+    }
+    
+    /// Was the outer overlay clicked this frame?
+    pub fn was_outside_clicked(&self) -> bool {
+        let modal_state = ModalState::load(&self.ctx, self.id);
+        modal_state.was_outside_clicked
+    }
+
     /// Open the modal; make it visible. The modal prevents user input to other parts of the
     /// application.
     pub fn open(&self) {
@@ -259,7 +273,7 @@ impl Modal {
     /// });
     /// ```
     pub fn title(&self, ui: &mut Ui, text: impl Into<RichText>) {
-        let text: RichText = text.into();        
+        let text: RichText = text.into();
         ui.vertical_centered(|ui| {
             ui.heading(text);
         });
@@ -414,8 +428,11 @@ impl Modal {
                 .show(&self.ctx, |ui: &mut Ui| {
                     let screen_rect = ui.ctx().input().screen_rect;
                     let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
-                    if area_response.clicked() && self.close_on_outside_click {
-                        self.close();
+                    if area_response.clicked() {
+                        self.set_outside_clicked(true);
+                        if self.close_on_outside_click {
+                            self.close();
+                        }
                     }
                     ui.painter().rect_filled(
                         screen_rect,
@@ -436,6 +453,7 @@ impl Modal {
                 inner_response.response.request_focus();
                 ctx_clone.move_to_top(inner_response.response.layer_id);
             }
+            self.set_outside_clicked(false);
         }
     }
 

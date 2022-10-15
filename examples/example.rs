@@ -50,7 +50,7 @@ impl eframe::App for ExampleApp {
                 if self.include_title {
                     modal.title(ui, &mut self.modal_title);
                 }
-                // the "frame" of the modal refers to the container of the icon and body. 
+                // the "frame" of the modal refers to the container of the icon and body.
                 // this helper just applies a margin specified by the ModalStyle
                 modal.frame(ui, |ui| {
                     if self.include_body {
@@ -59,7 +59,9 @@ impl eframe::App for ExampleApp {
                 });
                 if self.include_buttons {
                     modal.buttons(ui, |ui| {
-                        if modal.button(ui, "close").clicked() {
+                        if modal.button(ui, "close").clicked()
+                            || (self.close_on_outside_click && modal.was_outside_clicked())
+                        {
                             // all buttons created with the helper functions automatically
                             // close the modal on click, but you can close it yourself with
                             // ['modal.close()']
@@ -147,7 +149,6 @@ impl eframe::App for ExampleApp {
                             DragValue::new(&mut self.modal_style.icon_size).clamp_range(8..=48);
                         ui.add_sized(ui.available_rect_before_wrap().size(), icon_size);
                         ui.end_row();
-
 
                         ui.label("dialog icon");
                         let mut use_icon = self.dialog_icon.is_some();
