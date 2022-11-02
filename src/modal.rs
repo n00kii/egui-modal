@@ -125,10 +125,10 @@ pub struct ModalStyle {
 
 impl ModalState {
     fn load(ctx: &Context, id: Id) -> Self {
-        ctx.data().get_persisted(id).unwrap_or_default()
+        ctx.data().get_temp(id).unwrap_or_default()
     }
     fn save(self, ctx: &Context, id: Id) {
-        ctx.data().insert_persisted(id, self)
+        ctx.data().insert_temp(id, self)
     }
 }
 
