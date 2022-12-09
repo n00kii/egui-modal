@@ -22,7 +22,7 @@ modal.show(|ui| {
     });
     modal.buttons(ui, |ui| {
         // After clicking, the modal is automatically closed
-        if modal.button("close").clicked() {
+        if modal.button(ui, "close").clicked() {
             println!("Hello world!")
         };
     }); 
