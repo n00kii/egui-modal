@@ -450,7 +450,6 @@ impl Modal {
 
             let response = window.show(&ctx_clone, add_contents);
             if let Some(inner_response) = response {
-                inner_response.response.request_focus();
                 ctx_clone.move_to_top(inner_response.response.layer_id);
             }
             self.set_outside_clicked(false);

@@ -5,6 +5,7 @@ struct ExampleApp {
     modal_style: ModalStyle,
     modal_title: String,
     modal_body: String,
+    nested_modal_text: String,
 
     include_title: bool,
     include_body: bool,
@@ -21,6 +22,7 @@ impl Default for ExampleApp {
             modal_title: "a modal".to_string(),
             modal_body: "here is the modal body".to_string(),
 
+            nested_modal_text: String::new(),
             include_title: true,
             include_body: true,
             include_buttons: true,
@@ -228,6 +230,8 @@ impl eframe::App for ExampleApp {
             nested_modal.show(|ui| {
                 nested_modal.frame(ui, |ui| {
                     nested_modal.body(ui, "hello there!");
+                    // you can put textboxes in here.
+                    ui.text_edit_singleline(&mut self.nested_modal_text);
                 });
                 nested_modal.buttons(ui, |ui| {
                     nested_modal.button(ui, "close");
