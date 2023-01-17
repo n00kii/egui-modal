@@ -239,6 +239,12 @@ impl Modal {
         let modal_state = ModalState::load(&self.ctx, self.id);
         modal_state.was_outside_clicked
     }
+    
+    /// Is the modal currently open?
+    pub fn is_open(&self) -> bool {
+        let modal_state = ModalState::load(&self.ctx, self.id);
+        modal_state.is_open
+    }
 
     /// Open the modal; make it visible. The modal prevents user input to other parts of the
     /// application.
@@ -428,6 +434,11 @@ impl Modal {
                 .show(&self.ctx, |ui: &mut Ui| {
                     let screen_rect = ui.ctx().input().screen_rect;
                     let area_response = ui.allocate_response(screen_rect.size(), Sense::click());
+                    // let current_focus = area_response.ctx.memory().focus().clone();
+                    // let top_layer = area_response.ctx.memory().layer_ids().last();
+                    // if let Some(focus) = current_focus {
+                    //     area_response.ctx.memory().surrender_focus(focus)
+                    // }
                     if area_response.clicked() {
                         self.set_outside_clicked(true);
                         if self.close_on_outside_click {
@@ -447,7 +458,7 @@ impl Modal {
                 .title_bar(false)
                 .anchor(Align2::CENTER_CENTER, [0., 0.])
                 .resizable(false);
-
+            
             let response = window.show(&ctx_clone, add_contents);
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
