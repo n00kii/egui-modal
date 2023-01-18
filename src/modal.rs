@@ -426,6 +426,7 @@ impl Modal {
     /// when [`Modal::open`] is used.
     pub fn show<R>(&self, add_contents: impl FnOnce(&mut Ui) -> R) {
         let mut modal_state = ModalState::load(&self.ctx, self.id);
+        self.set_outside_clicked(false);
         if modal_state.is_open {
             let ctx_clone = self.ctx.clone();
             Area::new(self.id)
@@ -463,7 +464,6 @@ impl Modal {
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
             }
-            self.set_outside_clicked(false);
         }
     }
 
