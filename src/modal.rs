@@ -79,7 +79,7 @@ struct ModalState {
     modal_type: ModalType,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Contains styling parameters for the modal, like body margin
 /// and button colors.
 pub struct ModalStyle {
@@ -118,6 +118,11 @@ pub struct ModalStyle {
     pub success_icon_color: Color32,
     /// The color of the error icon
     pub error_icon_color: Color32,
+
+    /// The default width of the modal
+    pub default_width: Option<f32>,
+    /// The default height of the modal
+    // pub default_height: Option<f32>,
 
     /// The alignment of text inside the body
     pub body_alignment: Align,
@@ -163,6 +168,9 @@ impl Default for ModalStyle {
             warning_icon_color: WARNING_ICON_COLOR,
             success_icon_color: SUCCESS_ICON_COLOR,
             error_icon_color: ERROR_ICON_COLOR,
+
+            // default_height: None,
+            default_width: None,
 
             body_alignment: Align::Min,
         }
@@ -213,12 +221,13 @@ impl Modal {
     /// Creates a new [`Modal`]. Can use constructor functions like [`Modal::with_style`]
     /// to modify upon creation.
     pub fn new(ctx: &Context, id_source: impl std::fmt::Display) -> Self {
+        let self_id = Id::new(id_source.to_string());
         Self {
-            id: Id::new(id_source.to_string()),
+            window_id: self_id.with("window"),
+            id: self_id,
             style: ModalStyle::default(),
             ctx: ctx.clone(),
             close_on_outside_click: false,
-            window_id: Id::new("window_".to_string() + &id_source.to_string()),
         }
     }
 
@@ -233,13 +242,13 @@ impl Modal {
         modal_state.was_outside_clicked = was_clicked;
         modal_state.save(&self.ctx, self.id)
     }
-    
+
     /// Was the outer overlay clicked this frame?
     pub fn was_outside_clicked(&self) -> bool {
         let modal_state = ModalState::load(&self.ctx, self.id);
         modal_state.was_outside_clicked
     }
-    
+
     /// Is the modal currently open?
     pub fn is_open(&self) -> bool {
         let modal_state = ModalState::load(&self.ctx, self.id);
@@ -453,13 +462,26 @@ impl Modal {
                     );
                 });
 
-            let window = Window::new("")
-                .id(self.window_id)
+            // the below lines of code addresses a weird problem where if the default_height changes, egui doesnt respond unless
+            // it's a different window id
+            let window_id = self.style.default_width.map_or(self.window_id, |w| self.window_id.with(w.to_string()));
+            // window_id = self.style.default_height.map_or(window_id, |h| window_id.with(h.to_string()));
+
+            let mut window = Window::new("")
+                .id(window_id)
                 .open(&mut modal_state.is_open)
                 .title_bar(false)
                 .anchor(Align2::CENTER_CENTER, [0., 0.])
                 .resizable(false);
-            
+
+            // if let Some(default_height) = self.style.default_height {
+            //     window = window.min_height(default_height);
+            // }
+
+            if let Some(default_width) = self.style.default_width {
+                window = window.default_width(default_width);
+            }
+
             let response = window.show(&ctx_clone, add_contents);
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
