@@ -271,9 +271,9 @@ impl eframe::App for ExampleApp {
     }
 }
 fn main() {
-    eframe::run_native(
+    let _ = eframe::run_native(
         "egui-modal example",
         eframe::NativeOptions::default(),
         Box::new(|_cc| Box::new(ExampleApp::default())),
-    )
+    );
 }
