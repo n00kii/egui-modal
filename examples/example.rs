@@ -128,21 +128,21 @@ impl eframe::App for ExampleApp {
                         ui.text_edit_singleline(&mut self.modal_body);
                         ui.end_row();
 
-                        // let mut has_height = self.modal_style.default_height.is_some();
+                        let mut has_height = self.modal_style.default_height.is_some();
                         let mut has_width = self.modal_style.default_width.is_some();
-                        // if ui.checkbox(&mut has_height, "default height").changed() {
-                        //     if has_height {
-                        //         self.modal_style.default_height = Some(100.)
-                        //     } else {
-                        //         self.modal_style.default_height = None
-                        //     }
-                        // }
-                        // if let Some(modal_height) = self.modal_style.default_height.as_mut() {
-                        //     let modal_height =
-                        //         DragValue::new(modal_height).clamp_range(0..=1000);
-                        //     ui.add_sized(ui.available_rect_before_wrap().size(), modal_height);
-                        // }
-                        // ui.end_row();
+                        if ui.checkbox(&mut has_height, "default height").changed() {
+                            if has_height {
+                                self.modal_style.default_height = Some(100.)
+                            } else {
+                                self.modal_style.default_height = None
+                            }
+                        }
+                        if let Some(modal_height) = self.modal_style.default_height.as_mut() {
+                            let modal_height =
+                                DragValue::new(modal_height).clamp_range(0..=1000);
+                            ui.add_sized(ui.available_rect_before_wrap().size(), modal_height);
+                        }
+                        ui.end_row();
 
                         if ui.checkbox(&mut has_width, "default width").changed() {
                             if has_width {

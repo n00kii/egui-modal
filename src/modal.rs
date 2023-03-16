@@ -1,7 +1,7 @@
 use egui::{
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
-    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, WidgetText, Window,
+    vec2, Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, WidgetText, Window, pos2,
 };
 
 const ERROR_ICON_COLOR: Color32 = Color32::from_rgb(200, 90, 90);
@@ -74,9 +74,10 @@ enum ModalType {
 /// Information about the current state of the modal. (Pretty empty
 /// right now but may be expanded upon in the future.)
 struct ModalState {
-    was_outside_clicked: bool,
     is_open: bool,
+    was_outside_clicked: bool,
     modal_type: ModalType,
+    last_frame_height: Option<f32>
 }
 
 #[derive(Clone, Debug)]
@@ -122,15 +123,16 @@ pub struct ModalStyle {
     /// The default width of the modal
     pub default_width: Option<f32>,
     /// The default height of the modal
-    // pub default_height: Option<f32>,
+    pub default_height: Option<f32>,
 
     /// The alignment of text inside the body
     pub body_alignment: Align,
+
 }
 
 impl ModalState {
     fn load(ctx: &Context, id: Id) -> Self {
-        ctx.data_mut(|d| d.get_temp(id).unwrap_or_default() )
+        ctx.data_mut(|d| d.get_temp(id).unwrap_or_default())
     }
     fn save(self, ctx: &Context, id: Id) {
         ctx.data_mut(|d| d.insert_temp(id, self))
@@ -143,6 +145,7 @@ impl Default for ModalState {
             was_outside_clicked: false,
             is_open: false,
             modal_type: ModalType::Modal,
+            last_frame_height: None,
         }
     }
 }
@@ -169,7 +172,7 @@ impl Default for ModalStyle {
             success_icon_color: SUCCESS_ICON_COLOR,
             error_icon_color: ERROR_ICON_COLOR,
 
-            // default_height: None,
+            default_height: None,
             default_width: None,
 
             body_alignment: Align::Min,
@@ -334,10 +337,26 @@ impl Modal {
     /// });
     /// ```
     pub fn frame<R>(&self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
+        let last_frame_height = ModalState::load(&self.ctx, self.id).last_frame_height.unwrap_or_default();
+        let default_height = self.style.default_height.unwrap_or_default();
+        let space_height = ((default_height - last_frame_height) * 0.5).max(0.);
+        // dbg!(last_frame_height, default_height, space_height);
         ui.with_layout(
             Layout::top_down(Align::Center).with_cross_align(Align::Center),
-            |ui| ui_with_margin(ui, self.style.frame_margin, |ui| add_contents(ui)),
+            |ui| {
+                ui_with_margin(ui, self.style.frame_margin, |ui| {
+                    if space_height > 0. {
+                        ui.add_space(space_height);
+                        add_contents(ui);
+                        ui.add_space(space_height);
+                    } else {
+                        add_contents(ui);
+                    }
+                })
+            },
         );
+        // modal_state.save(&self.ctx, self.id);
+
     }
 
     /// Helper function that should be used when using a body and icon together.
@@ -464,8 +483,12 @@ impl Modal {
 
             // the below lines of code addresses a weird problem where if the default_height changes, egui doesnt respond unless
             // it's a different window id
-            let window_id = self.style.default_width.map_or(self.window_id, |w| self.window_id.with(w.to_string()));
-            // window_id = self.style.default_height.map_or(window_id, |h| window_id.with(h.to_string()));
+            let mut window_id = self
+                .style
+                .default_width
+                .map_or(self.window_id, |w| self.window_id.with(w.to_string()));
+
+            window_id = self.style.default_height.map_or(window_id, |h| window_id.with(h.to_string()));
 
             let mut window = Window::new("")
                 .id(window_id)
@@ -474,17 +497,25 @@ impl Modal {
                 .anchor(Align2::CENTER_CENTER, [0., 0.])
                 .resizable(false);
 
-            // if let Some(default_height) = self.style.default_height {
-            //     window = window.min_height(default_height);
-            // }
-
+            let recalculating_height = self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
+            
+            if let Some(default_height) = self.style.default_height {
+                window = window.default_height(default_height);
+            }
+            
             if let Some(default_width) = self.style.default_width {
                 window = window.default_width(default_width);
             }
 
             let response = window.show(&ctx_clone, add_contents);
+            
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
+                if recalculating_height {
+                    let mut modal_state = ModalState::load(&self.ctx, self.id);
+                    modal_state.last_frame_height = Some(inner_response.response.rect.height());
+                    modal_state.save(&self.ctx, self.id);
+                }
             }
         }
     }
