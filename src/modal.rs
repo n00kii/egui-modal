@@ -1,7 +1,7 @@
 use egui::{
     emath::{Align, Align2},
     epaint::{Color32, Pos2, Rounding},
-    vec2, Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, WidgetText, Window, pos2,
+    Area, Button, Context, Id, Layout, Response, RichText, Sense, Ui, WidgetText, Window,
 };
 
 const ERROR_ICON_COLOR: Color32 = Color32::from_rgb(200, 90, 90);
@@ -340,7 +340,6 @@ impl Modal {
         let last_frame_height = ModalState::load(&self.ctx, self.id).last_frame_height.unwrap_or_default();
         let default_height = self.style.default_height.unwrap_or_default();
         let space_height = ((default_height - last_frame_height) * 0.5).max(0.);
-        // dbg!(last_frame_height, default_height, space_height);
         ui.with_layout(
             Layout::top_down(Align::Center).with_cross_align(Align::Center),
             |ui| {
@@ -355,8 +354,6 @@ impl Modal {
                 })
             },
         );
-        // modal_state.save(&self.ctx, self.id);
-
     }
 
     /// Helper function that should be used when using a body and icon together.
