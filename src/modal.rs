@@ -77,7 +77,7 @@ struct ModalState {
     is_open: bool,
     was_outside_clicked: bool,
     modal_type: ModalType,
-    last_frame_height: Option<f32>
+    last_frame_height: Option<f32>,
 }
 
 #[derive(Clone, Debug)]
@@ -127,7 +127,6 @@ pub struct ModalStyle {
 
     /// The alignment of text inside the body
     pub body_alignment: Align,
-
 }
 
 impl ModalState {
@@ -337,7 +336,9 @@ impl Modal {
     /// });
     /// ```
     pub fn frame<R>(&self, ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
-        let last_frame_height = ModalState::load(&self.ctx, self.id).last_frame_height.unwrap_or_default();
+        let last_frame_height = ModalState::load(&self.ctx, self.id)
+            .last_frame_height
+            .unwrap_or_default();
         let default_height = self.style.default_height.unwrap_or_default();
         let space_height = ((default_height - last_frame_height) * 0.5).max(0.);
         ui.with_layout(
@@ -454,7 +455,7 @@ impl Modal {
         self.set_outside_clicked(false);
         if modal_state.is_open {
             let ctx_clone = self.ctx.clone();
-            Area::new(self.id)
+            let area_resp = Area::new(self.id)
                 .interactable(true)
                 .fixed_pos(Pos2::ZERO)
                 .show(&self.ctx, |ui: &mut Ui| {
@@ -478,6 +479,8 @@ impl Modal {
                     );
                 });
 
+            ctx_clone.move_to_top(area_resp.response.layer_id);
+
             // the below lines of code addresses a weird problem where if the default_height changes, egui doesnt respond unless
             // it's a different window id
             let mut window_id = self
@@ -485,7 +488,10 @@ impl Modal {
                 .default_width
                 .map_or(self.window_id, |w| self.window_id.with(w.to_string()));
 
-            window_id = self.style.default_height.map_or(window_id, |h| window_id.with(h.to_string()));
+            window_id = self
+                .style
+                .default_height
+                .map_or(window_id, |h| window_id.with(h.to_string()));
 
             let mut window = Window::new("")
                 .id(window_id)
@@ -494,18 +500,19 @@ impl Modal {
                 .anchor(Align2::CENTER_CENTER, [0., 0.])
                 .resizable(false);
 
-            let recalculating_height = self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
-            
+            let recalculating_height =
+                self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
+
             if let Some(default_height) = self.style.default_height {
                 window = window.default_height(default_height);
             }
-            
+
             if let Some(default_width) = self.style.default_width {
                 window = window.default_width(default_width);
             }
 
             let response = window.show(&ctx_clone, add_contents);
-            
+
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
                 if recalculating_height {
