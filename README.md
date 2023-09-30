@@ -1,6 +1,6 @@
 # egui-modal, a modal library for [`egui`](https://github.com/emilk/egui)
-[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.2.4)
-[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.2.4/egui_modal/)
+[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.2.5)
+[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.2.5/egui_modal/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/n00kii/egui-modal/blob/main/README.md)
 
 ![modal](https://raw.githubusercontent.com/n00kii/egui-modal/main/media/modal.png?token=GHSAT0AAAAAABVWXBGJBQSFC3PLQP4KKOG6YZJIDCA)
