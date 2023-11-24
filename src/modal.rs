@@ -472,11 +472,8 @@ impl Modal {
                             self.close();
                         }
                     }
-                    ui.painter().rect_filled(
-                        screen_rect,
-                        Rounding::none(),
-                        self.style.overlay_color,
-                    );
+                    ui.painter()
+                        .rect_filled(screen_rect, Rounding::ZERO, self.style.overlay_color);
                 });
 
             ctx_clone.move_to_top(area_resp.response.layer_id);
@@ -555,11 +552,11 @@ impl Modal {
                     self.title(ui, title)
                 }
                 self.frame(ui, |ui| {
-                    if !modal_data.body.is_some() {
+                    if modal_data.body.is_none() {
                         if let Some(icon) = modal_data.icon {
                             self.icon(ui, icon)
                         }
-                    } else if !modal_data.icon.is_some() {
+                    } else if modal_data.icon.is_none() {
                         if let Some(body) = modal_data.body {
                             self.body(ui, body)
                         }
