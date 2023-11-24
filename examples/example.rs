@@ -92,12 +92,16 @@ impl eframe::App for ExampleApp {
                 }
 
                 if ui.button("open dialog").clicked() {
-                    // [`.open_dialog()`] both sets the visual info for the dialog and opens it at the same time
-                    dialog_modal.open_dialog(
-                        Some("this is a dialog"),
-                        Some("this helps for showing information about one-time events"),
-                        self.dialog_icon.clone(),
-                    )
+                    // [`.dialog()`] can be used to both set the visual info for the dialog
+                    // and open it at the same time
+                    let mut dialog_builder = dialog_modal
+                        .dialog()
+                        .with_title("this is a dialog")
+                        .with_body("this helps for showing information about one-time events");
+                    if let Some(dialog_icon) = self.dialog_icon.clone() {
+                        dialog_builder = dialog_builder.with_icon(dialog_icon);
+                    }
+                    dialog_builder.open();
                 }
 
                 ui.separator();
@@ -138,8 +142,7 @@ impl eframe::App for ExampleApp {
                             }
                         }
                         if let Some(modal_height) = self.modal_style.default_height.as_mut() {
-                            let modal_height =
-                                DragValue::new(modal_height).clamp_range(0..=1000);
+                            let modal_height = DragValue::new(modal_height).clamp_range(0..=1000);
                             ui.add_sized(ui.available_rect_before_wrap().size(), modal_height);
                         }
                         ui.end_row();
@@ -152,8 +155,7 @@ impl eframe::App for ExampleApp {
                             }
                         }
                         if let Some(modal_width) = self.modal_style.default_width.as_mut() {
-                            let modal_width =
-                                DragValue::new(modal_width).clamp_range(0..=1000);
+                            let modal_width = DragValue::new(modal_width).clamp_range(0..=1000);
                             ui.add_sized(ui.available_rect_before_wrap().size(), modal_width);
                         }
                         ui.end_row();

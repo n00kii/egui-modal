@@ -58,16 +58,27 @@ impl std::fmt::Display for Icon {
 }
 
 #[derive(Clone, Default)]
-struct ModalData {
+struct DialogData {
     title: Option<String>,
     body: Option<String>,
     icon: Option<Icon>,
 }
 
+/// Used for constructing and opening a modal dialog. This can be used
+/// to both set the title/body/icon of the modal and open it as a one-time call
+/// (as opposed to a continous call in the update loop) at the same time.
+/// Make sure to call `DialogBuilder::open` to actually open the dialog.
+#[must_use = "use `DialogBuilder::open`"]
+pub struct DialogBuilder {
+    data: DialogData,
+    modal_id: Id,
+    ctx: Context,
+}
+
 #[derive(Clone)]
 enum ModalType {
     Modal,
-    Dialog(ModalData),
+    Dialog(DialogData),
 }
 
 #[derive(Clone)]
@@ -523,14 +534,15 @@ impl Modal {
 
     /// Open the modal as a dialog. This is a shorthand way of defining a [`Modal::show`] once,
     /// for example, if a function returns an `Error`. This should be used in conjunction with
-    /// [`Modal::show_dialog`]. This function should be put AFTER any calls to
+    /// [`Modal::show_dialog`].
+    #[deprecated(since = "0.3.0", note = "use `Modal::dialog`")]
     pub fn open_dialog(
         &self,
         title: Option<impl std::fmt::Display>,
         body: Option<impl std::fmt::Display>,
         icon: Option<Icon>,
     ) {
-        let modal_data = ModalData {
+        let modal_data = DialogData {
             title: title.map(|s| s.to_string()),
             body: body.map(|s| s.to_string()),
             icon,
@@ -541,7 +553,17 @@ impl Modal {
         modal_state.save(&self.ctx, self.id);
     }
 
-    /// Needed in order to use [`Modal::open_dialog`]. Make sure this is called every frame, as
+    /// Create a `DialogBuilder` for this modal. Make sure to use `DialogBuilder::open`
+    /// to open the dialog.
+    pub fn dialog(&self) -> DialogBuilder {
+        DialogBuilder {
+            data: DialogData::default(),
+            modal_id: self.id.clone(),
+            ctx: self.ctx.clone(),
+        }
+    }
+
+    /// Needed in order to use [`Modal::dialog`]. Make sure this is called every frame, as
     /// it renders the necessary ui when using a modal as a dialog.
     pub fn show_dialog(&mut self) {
         let modal_state = ModalState::load(&self.ctx, self.id);
@@ -571,5 +593,30 @@ impl Modal {
                 })
             });
         }
+    }
+}
+
+impl DialogBuilder {
+    /// Construct this dialog with the given title.
+    pub fn with_title(mut self, title: impl std::fmt::Display) -> Self {
+        self.data.title = Some(title.to_string());
+        self
+    }
+    /// Construct this dialog with the given body.
+    pub fn with_body(mut self, body: impl std::fmt::Display) -> Self {
+        self.data.body = Some(body.to_string());
+        self
+    }
+    /// Construct this dialog with the given icon.
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.data.icon = Some(icon);
+        self
+    }
+    /// Open the dialog.
+    pub fn open(self) {
+        let mut modal_state = ModalState::load(&self.ctx, self.modal_id);
+        modal_state.modal_type = ModalType::Dialog(self.data);
+        modal_state.is_open = true;
+        modal_state.save(&self.ctx, self.modal_id);
     }
 }

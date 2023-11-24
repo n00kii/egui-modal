@@ -1,6 +1,6 @@
 # egui-modal, a modal library for [`egui`](https://github.com/emilk/egui)
-[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.2.5)
-[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.2.5/egui_modal/)
+[![crates.io](https://img.shields.io/crates/v/egui-modal)](https://crates.io/crates/egui-modal/0.3.0)
+[![docs](https://docs.rs/egui-modal/badge.svg)](https://docs.rs/egui-modal/0.3.0/egui_modal/)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/n00kii/egui-modal/blob/main/README.md)
 
 ![modal](https://raw.githubusercontent.com/n00kii/egui-modal/main/media/modal.png?token=GHSAT0AAAAAABVWXBGJBQSFC3PLQP4KKOG6YZJIDCA)
@@ -40,23 +40,23 @@ in some use cases, it may be more convenient to both open and style the modal as
 ```rust
 /* calling every frame */
 
-let dialog = Modal::new(ctx, "my_dialog");
+let modal = Modal::new(ctx, "my_dialog");
 
 ...
 ...
 ...
 
 // Show the dialog
-dialog.show_dialog();
+modal.show_dialog();
 ```
 elsewhere,
 ```rust
 /* happens once */
 if let Ok(data) = my_function() {
-    dialog.open_dialog(
-        Some("my_function's result is..."), // title
-        Some("my_function was successful!"), // body
-        Some(Icon::Success) // icon
-    )
+    modal.dialog()
+        .with_title("my_function's result is...")
+        .with_body("my_function was successful!")
+        .with_icon(Icon::Success)
+        .open()
 }
 ```
