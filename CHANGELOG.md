@@ -1,3 +1,6 @@
+# 0.3.3
+ - update egui & eframe -> `0.26.0`
+
 # 0.3.2
  - update egui -> `0.25.0`
 
