@@ -1,5 +1,6 @@
-# unreleased
+# 0.3.4
  - disable default features for `egui`
+ - update `egui` & `eframe` -> `0.26.1`
 
 # 0.3.3
  - update `egui` & `eframe` -> `0.26.0`
