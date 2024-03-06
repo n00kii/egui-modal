@@ -270,12 +270,18 @@ impl Modal {
 
     /// Open the modal; make it visible. The modal prevents user input to other parts of the
     /// application.
+    ///
+    /// ⚠️ WARNING ⚠️: This function requires a write lock to the [`egui::Context`]. Using it within
+    /// closures within functions like [`egui::Ui::input_mut`] will result in a deadlock. [Tracking issue](https://github.com/n00kii/egui-modal/issues/15)
     pub fn open(&self) {
         self.set_open_state(true)
     }
 
     /// Close the modal so that it is no longer visible, allowing input to flow back into
     /// the application.
+    ///
+    /// ⚠️ WARNING ⚠️: This function requires a write lock to the [`egui::Context`]. Using it within
+    /// closures within functions like [`egui::Ui::input_mut`] will result in a deadlock. [Tracking issue](https://github.com/n00kii/egui-modal/issues/15)
     pub fn close(&self) {
         self.set_open_state(false)
     }
@@ -613,6 +619,9 @@ impl DialogBuilder {
         self
     }
     /// Open the dialog.
+    ///
+    /// ⚠️ WARNING ⚠️: This function requires a write lock to the [`egui::Context`]. Using it within
+    /// closures within functions like [`egui::Ui::input_mut`] will result in a deadlock. [Tracking issue](https://github.com/n00kii/egui-modal/issues/15)
     pub fn open(self) {
         let mut modal_state = ModalState::load(&self.ctx, self.modal_id);
         modal_state.modal_type = ModalType::Dialog(self.data);
