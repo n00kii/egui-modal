@@ -1,12 +1,13 @@
 # 0.3.5
  - add deadlock warning to some functions
+ - update `egui` -> `0.26.2`
   
 # 0.3.4
  - disable default features for `egui`
- - update `egui` & `eframe` -> `0.26.1`
+ - update `egui` -> `0.26.1`
 
 # 0.3.3
- - update `egui` & `eframe` -> `0.26.0`
+ - update `egui` -> `0.26.0`
 
 # 0.3.2
  - update `egui` -> `0.25.0`
