@@ -1,3 +1,6 @@
+# 0.3.6
+ - update `egui` -> `0.27`
+
 # 0.3.5
  - add deadlock warning to some functions
  - update `egui` -> `0.26.2`
