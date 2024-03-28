@@ -1,6 +1,6 @@
 [package]
 name = "egui-modal"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
 license = "MIT"
 description = "a modal library for egui"
@@ -11,7 +11,7 @@ authors = ["n00kii"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-egui = {version = "0.26.1", default-features = false}
+egui = { version = "0.27", default-features = false }
 
 [dev-dependencies]
-eframe  = "0.26.1"
+eframe  = "0.27"
