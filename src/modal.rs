@@ -140,6 +140,10 @@ pub struct ModalStyle {
     pub body_alignment: Align,
     /// Window title, title bar will only be shown if this is [Some]
     pub window_title: Option<String>,
+    /// Whether the window is collapsible
+    ///
+    /// [`ModalStyle::window_title`] must be [Some] for this to take effect
+    pub window_collapsible: bool,
 }
 
 impl ModalState {
@@ -189,6 +193,7 @@ impl Default for ModalStyle {
 
             body_alignment: Align::Min,
             window_title: None,
+            window_collapsible: false,
         }
     }
 }
@@ -521,7 +526,8 @@ impl Modal {
             .open(&mut modal_state.is_open)
             .title_bar(self.style.window_title.is_some())
             .anchor(Align2::CENTER_CENTER, [0., 0.])
-            .resizable(false);
+            .resizable(false)
+            .collapsible(self.style.window_collapsible);
 
             let recalculating_height =
                 self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
