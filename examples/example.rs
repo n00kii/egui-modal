@@ -128,6 +128,7 @@ impl eframe::App for ExampleApp {
                 ui.checkbox(&mut self.include_buttons, "include buttons");
                 ui.checkbox(&mut self.with_window_title, "set window title");
                 if self.with_window_title {
+                    ui.checkbox(&mut self.modal_style.window_close_button, "close button");
                     let window_title = self
                         .modal_style
                         .window_title

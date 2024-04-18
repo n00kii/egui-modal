@@ -144,6 +144,8 @@ pub struct ModalStyle {
     ///
     /// [`ModalStyle::window_title`] must be [Some] for this to take effect
     pub window_collapsible: bool,
+    /// Whether the window has an ❌ button.
+    pub window_close_button: bool,
 }
 
 impl ModalState {
@@ -194,6 +196,7 @@ impl Default for ModalStyle {
             body_alignment: Align::Min,
             window_title: None,
             window_collapsible: false,
+            window_close_button: true,
         }
     }
 }
@@ -523,11 +526,15 @@ impl Modal {
                     .unwrap_or(""),
             )
             .id(window_id)
-            .open(&mut modal_state.is_open)
             .title_bar(self.style.window_title.is_some())
             .anchor(Align2::CENTER_CENTER, [0., 0.])
             .resizable(false)
             .collapsible(self.style.window_collapsible);
+
+            // add ❌ button
+            if self.style.window_close_button {
+                window = window.open(&mut modal_state.is_open);
+            }
 
             let recalculating_height =
                 self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
