@@ -276,6 +276,6 @@ fn main() {
     let _ = eframe::run_native(
         "egui-modal example",
         eframe::NativeOptions::default(),
-        Box::new(|_cc| Box::new(ExampleApp::default())),
+        Box::new(|_cc| Ok(Box::new(ExampleApp::default()))),
     );
 }
