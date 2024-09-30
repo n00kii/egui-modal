@@ -142,7 +142,7 @@ impl eframe::App for ExampleApp {
                             }
                         }
                         if let Some(modal_height) = self.modal_style.default_height.as_mut() {
-                            let modal_height = DragValue::new(modal_height).clamp_range(0..=1000);
+                            let modal_height = DragValue::new(modal_height).range(0..=1000);
                             ui.add_sized(ui.available_rect_before_wrap().size(), modal_height);
                         }
                         ui.end_row();
@@ -155,32 +155,32 @@ impl eframe::App for ExampleApp {
                             }
                         }
                         if let Some(modal_width) = self.modal_style.default_width.as_mut() {
-                            let modal_width = DragValue::new(modal_width).clamp_range(0..=1000);
+                            let modal_width = DragValue::new(modal_width).range(0..=1000);
                             ui.add_sized(ui.available_rect_before_wrap().size(), modal_width);
                         }
                         ui.end_row();
 
                         ui.label("body margin");
                         let body_margin =
-                            DragValue::new(&mut self.modal_style.body_margin).clamp_range(0..=20);
+                            DragValue::new(&mut self.modal_style.body_margin).range(0..=20);
                         ui.add_sized(ui.available_rect_before_wrap().size(), body_margin);
                         ui.end_row();
 
                         ui.label("frame margin");
                         let frame_margin =
-                            DragValue::new(&mut self.modal_style.frame_margin).clamp_range(0..=20);
+                            DragValue::new(&mut self.modal_style.frame_margin).range(0..=20);
                         ui.add_sized(ui.available_rect_before_wrap().size(), frame_margin);
                         ui.end_row();
 
                         ui.label("icon margin");
                         let icon_margin =
-                            DragValue::new(&mut self.modal_style.icon_margin).clamp_range(0..=20);
+                            DragValue::new(&mut self.modal_style.icon_margin).range(0..=20);
                         ui.add_sized(ui.available_rect_before_wrap().size(), icon_margin);
                         ui.end_row();
 
                         ui.label("icon size");
                         let icon_size =
-                            DragValue::new(&mut self.modal_style.icon_size).clamp_range(8..=48);
+                            DragValue::new(&mut self.modal_style.icon_size).range(8..=48);
                         ui.add_sized(ui.available_rect_before_wrap().size(), icon_size);
                         ui.end_row();
 
