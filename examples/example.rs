@@ -11,6 +11,7 @@ struct ExampleApp {
     include_body: bool,
     include_buttons: bool,
     close_on_outside_click: bool,
+    with_window_title: bool,
 
     dialog_icon: Option<Icon>,
 }
@@ -27,6 +28,7 @@ impl Default for ExampleApp {
             include_body: true,
             include_buttons: true,
             close_on_outside_click: false,
+            with_window_title: false,
 
             dialog_icon: Some(Icon::Info),
         }
@@ -116,9 +118,25 @@ impl eframe::App for ExampleApp {
                         self.close_on_outside_click = !self.close_on_outside_click
                     };
                 });
-                ui.checkbox(&mut self.include_title, "include title");
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.include_title, "include title");
+                    if self.modal_style.window_title.is_some() {
+                        ui.label("(this looks bad if you have a window title)");
+                    }
+                });
                 ui.checkbox(&mut self.include_body, "include body");
                 ui.checkbox(&mut self.include_buttons, "include buttons");
+                ui.checkbox(&mut self.with_window_title, "set window title");
+                if self.with_window_title {
+                    ui.checkbox(&mut self.modal_style.window_close_button, "close button");
+                    let window_title = self
+                        .modal_style
+                        .window_title
+                        .get_or_insert_with(|| "i'm a title".to_string());
+                    ui.text_edit_singleline(window_title);
+                } else {
+                    self.modal_style.window_title = None;
+                }
                 ui.separator();
                 egui::Grid::new("options_grid")
                     .min_col_width(200.)

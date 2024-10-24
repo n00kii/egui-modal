@@ -138,6 +138,14 @@ pub struct ModalStyle {
 
     /// The alignment of text inside the body
     pub body_alignment: Align,
+    /// Window title, title bar will only be shown if this is [Some]
+    pub window_title: Option<String>,
+    /// Whether the window is collapsible
+    ///
+    /// [`ModalStyle::window_title`] must be [Some] for this to take effect
+    pub window_collapsible: bool,
+    /// Whether the window has an ❌ button.
+    pub window_close_button: bool,
 }
 
 impl ModalState {
@@ -186,6 +194,9 @@ impl Default for ModalStyle {
             default_width: None,
 
             body_alignment: Align::Min,
+            window_title: None,
+            window_collapsible: false,
+            window_close_button: true,
         }
     }
 }
@@ -507,12 +518,23 @@ impl Modal {
                 .default_height
                 .map_or(window_id, |h| window_id.with(h.to_string()));
 
-            let mut window = Window::new("")
-                .id(window_id)
-                .open(&mut modal_state.is_open)
-                .title_bar(false)
-                .anchor(Align2::CENTER_CENTER, [0., 0.])
-                .resizable(false);
+            let mut window = Window::new(
+                self.style
+                    .window_title
+                    .as_ref()
+                    .map(|t| t.as_str())
+                    .unwrap_or(""),
+            )
+            .id(window_id)
+            .title_bar(self.style.window_title.is_some())
+            .anchor(Align2::CENTER_CENTER, [0., 0.])
+            .resizable(false)
+            .collapsible(self.style.window_collapsible);
+
+            // add ❌ button
+            if self.style.window_close_button {
+                window = window.open(&mut modal_state.is_open);
+            }
 
             let recalculating_height =
                 self.style.default_height.is_some() && modal_state.last_frame_height.is_none();
@@ -529,10 +551,11 @@ impl Modal {
 
             if let Some(inner_response) = response {
                 ctx_clone.move_to_top(inner_response.response.layer_id);
-                if recalculating_height {
-                    let mut modal_state = ModalState::load(&self.ctx, self.id);
-                    modal_state.last_frame_height = Some(inner_response.response.rect.height());
-                    modal_state.save(&self.ctx, self.id);
+                if recalculating_height || !modal_state.is_open {
+                    let mut new_modal_state = ModalState::load(&self.ctx, self.id);
+                    new_modal_state.last_frame_height = Some(inner_response.response.rect.height());
+                    new_modal_state.is_open = modal_state.is_open;
+                    new_modal_state.save(&self.ctx, self.id);
                 }
             }
         }
